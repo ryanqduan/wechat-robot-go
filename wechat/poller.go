@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -21,6 +22,7 @@ type Poller struct {
 	channelVersion string
 	stopCh         chan struct{}
 	stopCancel     context.CancelFunc
+	mu             sync.RWMutex
 }
 
 // NewPoller creates a new Poller instance.
@@ -47,7 +49,9 @@ func (p *Poller) Run(ctx context.Context) error {
 
 	// Create an internal context that can be cancelled by Stop()
 	internalCtx, internalCancel := context.WithCancel(ctx)
+	p.mu.Lock()
 	p.stopCancel = internalCancel
+	p.mu.Unlock()
 	defer internalCancel()
 
 	consecutiveFails := 0
@@ -208,8 +212,11 @@ func (p *Poller) Stop() {
 	default:
 		close(p.stopCh)
 		// Cancel any ongoing HTTP request
-		if p.stopCancel != nil {
-			p.stopCancel()
+		p.mu.RLock()
+		cancel := p.stopCancel
+		p.mu.RUnlock()
+		if cancel != nil {
+			cancel()
 		}
 	}
 }

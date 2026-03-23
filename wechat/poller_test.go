@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -85,14 +86,17 @@ func TestPoller_ReceiveMessages(t *testing.T) {
 }
 
 func TestPoller_CursorUpdate(t *testing.T) {
-	// Track cursors sent in requests
+	// Track cursors sent in requests (thread-safe)
 	var cursors []string
+	var mu sync.Mutex
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/ilink/bot/getupdates" {
 			var req GetUpdatesRequest
 			json.NewDecoder(r.Body).Decode(&req)
+			mu.Lock()
 			cursors = append(cursors, req.GetUpdatesBuf)
+			mu.Unlock()
 
 			resp := GetUpdatesResponse{
 				Ret:                  0,
@@ -115,7 +119,9 @@ func TestPoller_CursorUpdate(t *testing.T) {
 
 	_ = poller.Run(ctx)
 
-	// Verify cursor updates
+	// Verify cursor updates (thread-safe read)
+	mu.Lock()
+	defer mu.Unlock()
 	if len(cursors) < 2 {
 		t.Fatalf("expected at least 2 poll requests, got %d", len(cursors))
 	}
@@ -371,12 +377,15 @@ func TestPoller_TimeoutNotCountedAsFailure(t *testing.T) {
 }
 
 func TestPoller_CursorUpdateAfterProcessing(t *testing.T) {
-	// Track the order of operations
+	// Track the order of operations (thread-safe)
 	var operations []string
 	var cursors []string
+	var mu sync.Mutex
 
 	handler := func(ctx context.Context, msg *Message) error {
+		mu.Lock()
 		operations = append(operations, "handler_called")
+		mu.Unlock()
 		return nil
 	}
 
@@ -387,8 +396,10 @@ func TestPoller_CursorUpdateAfterProcessing(t *testing.T) {
 		if r.URL.Path == "/ilink/bot/getupdates" {
 			var req GetUpdatesRequest
 			json.NewDecoder(r.Body).Decode(&req)
+			mu.Lock()
 			cursors = append(cursors, req.GetUpdatesBuf)
 			operations = append(operations, "poll_"+req.GetUpdatesBuf)
+			mu.Unlock()
 
 			if callCount == 1 {
 				// First call: return a message with new cursor
@@ -428,7 +439,10 @@ func TestPoller_CursorUpdateAfterProcessing(t *testing.T) {
 
 	_ = poller.Run(ctx)
 
-	// Verify operations order:
+	// Verify operations order (thread-safe read)
+	mu.Lock()
+	defer mu.Unlock()
+
 	// 1. poll_  (first poll with empty cursor)
 	// 2. handler_called (message processed)
 	// 3. poll_cursor_after_msg (second poll with updated cursor)
