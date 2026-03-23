@@ -25,6 +25,7 @@ type Bot struct {
 	typing        *TypingManager
 	media         *MediaManager
 	handler       MessageHandler
+	middlewares   []Middleware
 	contextTokens ContextTokenStore
 	mu            sync.Mutex
 }
@@ -106,6 +107,15 @@ func (b *Bot) OnMessage(handler MessageHandler) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	b.handler = handler
+}
+
+// Use registers one or more middlewares.
+// Middlewares are applied in the order registered (first registered = outermost).
+// Must be called before Run.
+func (b *Bot) Use(middlewares ...Middleware) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.middlewares = append(b.middlewares, middlewares...)
 }
 
 // Run starts the bot's message polling loop.
@@ -262,8 +272,8 @@ func (b *Bot) Client() *Client {
 	return b.client
 }
 
-// wrapHandler wraps the user's handler with logging and error recovery.
-// It also persists context tokens for future message sending.
+// wrapHandler wraps the user's handler with logging, panic recovery, and context token persistence.
+// It also applies any registered middlewares.
 func (b *Bot) wrapHandler() MessageHandler {
 	return func(ctx context.Context, msg *Message) error {
 		// Persist context token for this user conversation
@@ -277,21 +287,39 @@ func (b *Bot) wrapHandler() MessageHandler {
 
 		b.mu.Lock()
 		handler := b.handler
+		middlewares := b.middlewares
 		b.mu.Unlock()
 
 		if handler == nil {
 			return nil
 		}
 
-		// Call the user's handler
-		err := handler(ctx, msg)
-		if err != nil {
-			// Log the error and continue (don't interrupt polling)
-			b.config.logger.Error("message handler error",
-				slog.String("from_user_id", msg.FromUserID),
-				slog.String("error", err.Error()),
-			)
+		// Apply middlewares: Chain(m1, m2, m3)(handler)
+		wrapped := handler
+		if len(middlewares) > 0 {
+			wrapped = Chain(middlewares...)(handler)
 		}
+
+		// Call the wrapped handler with panic recovery (built-in safety net)
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					b.config.logger.Error("handler panic recovered",
+						slog.String("from_user_id", msg.FromUserID),
+						slog.Any("panic", r),
+					)
+				}
+			}()
+
+			err := wrapped(ctx, msg)
+			if err != nil {
+				// Log the error and continue (don't interrupt polling)
+				b.config.logger.Error("message handler error",
+					slog.String("from_user_id", msg.FromUserID),
+					slog.String("error", err.Error()),
+				)
+			}
+		}()
 
 		return nil // Always return nil to not interrupt polling
 	}

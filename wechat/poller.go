@@ -23,6 +23,7 @@ type Poller struct {
 	stopCh         chan struct{}
 	stopCancel     context.CancelFunc
 	mu             sync.RWMutex
+	wg             sync.WaitGroup // tracks in-flight handler goroutines
 }
 
 // NewPoller creates a new Poller instance.
@@ -153,6 +154,7 @@ func (p *Poller) Run(ctx context.Context) error {
 				continue
 			}
 
+			p.wg.Add(1)
 			if err := p.handler(internalCtx, msg); err != nil {
 				p.logger.Error("handler error",
 					"error", err,
@@ -163,6 +165,7 @@ func (p *Poller) Run(ctx context.Context) error {
 			} else {
 				processedCount++
 			}
+			p.wg.Done()
 		}
 
 		p.logger.Debug("messages processed",
@@ -204,7 +207,7 @@ func (p *Poller) poll(ctx context.Context) (*GetUpdatesResponse, error) {
 	return &resp, nil
 }
 
-// Stop signals the poller to stop.
+// Stop signals the poller to stop and waits for in-flight handlers to complete.
 func (p *Poller) Stop() {
 	select {
 	case <-p.stopCh:
@@ -219,6 +222,8 @@ func (p *Poller) Stop() {
 			cancel()
 		}
 	}
+	// Wait for all in-flight handlers to finish
+	p.wg.Wait()
 }
 
 // PollerWithTimeout creates a Client with custom HTTP timeout for long-polling.

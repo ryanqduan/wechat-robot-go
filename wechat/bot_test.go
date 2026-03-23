@@ -742,3 +742,124 @@ func TestBot_DownloadImage(t *testing.T) {
 		t.Logf("DownloadVideoFromItem error: %v", err)
 	}
 }
+
+func TestBot_HandlerPanic(t *testing.T) {
+	// Create mock server
+	callCount := int32(0)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/ilink/bot/getupdates":
+			n := atomic.AddInt32(&callCount, 1)
+			if n == 1 {
+				resp := GetUpdatesResponse{
+					Ret: 0,
+					Messages: []Message{
+						{
+							FromUserID:   "user1",
+							MessageType:  MessageTypeUser,
+							ContextToken: "tok",
+							ItemList: []MessageItem{
+								{Type: ItemTypeText, TextItem: &TextItem{Text: "panic trigger"}},
+							},
+						},
+					},
+					GetUpdatesBuf:        "c1",
+					LongPollingTimeoutMs: 50,
+				}
+				json.NewEncoder(w).Encode(resp)
+			} else {
+				time.Sleep(50 * time.Millisecond)
+				resp := GetUpdatesResponse{Ret: 0, GetUpdatesBuf: "c2"}
+				json.NewEncoder(w).Encode(resp)
+			}
+		default:
+			json.NewEncoder(w).Encode(map[string]int{"ret": 0})
+		}
+	}))
+	defer server.Close()
+
+	bot := NewBot(
+		WithBaseURL(server.URL),
+		WithHTTPClient(server.Client()),
+		WithLogger(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelError}))),
+		WithContextTokenStore(NewMemoryContextTokenStore()),
+	)
+	bot.client.SetToken("test-token")
+
+	// Handler that panics
+	bot.OnMessage(func(ctx context.Context, msg *Message) error {
+		panic("test panic!")
+	})
+
+	ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
+	defer cancel()
+
+	// Run should NOT crash despite panic in handler
+	err := bot.Run(ctx)
+	if err != nil && err != context.DeadlineExceeded {
+		t.Logf("Run returned: %v (expected context deadline)", err)
+	}
+	// If we reach here without crash, panic recovery works
+}
+
+func TestPoller_GracefulShutdown(t *testing.T) {
+	handlerDone := make(chan struct{})
+	handlerStarted := make(chan struct{})
+
+	handler := func(ctx context.Context, msg *Message) error {
+		close(handlerStarted)
+		time.Sleep(100 * time.Millisecond) // Simulate work
+		close(handlerDone)
+		return nil
+	}
+
+	callCount := int32(0)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/ilink/bot/getupdates" {
+			n := atomic.AddInt32(&callCount, 1)
+			if n == 1 {
+				resp := GetUpdatesResponse{
+					Ret: 0,
+					Messages: []Message{
+						{FromUserID: "user1", MessageType: MessageTypeUser,
+							ItemList: []MessageItem{{Type: ItemTypeText, TextItem: &TextItem{Text: "test"}}}},
+					},
+					GetUpdatesBuf:        "c1",
+					LongPollingTimeoutMs: 50,
+				}
+				json.NewEncoder(w).Encode(resp)
+			} else {
+				time.Sleep(5 * time.Second)
+			}
+		}
+	}))
+	defer server.Close()
+
+	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
+	poller := NewPoller(client, handler, slog.Default(), "1.0.3")
+
+	done := make(chan error)
+	go func() {
+		done <- poller.Run(context.Background())
+	}()
+
+	// Wait for handler to start processing
+	<-handlerStarted
+
+	// Stop immediately - should wait for handler to finish
+	poller.Stop()
+
+	// Handler should have completed
+	select {
+	case <-handlerDone:
+		// OK - handler finished before Stop returned
+	case <-time.After(2 * time.Second):
+		t.Error("handler did not complete after Stop()")
+	}
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Error("poller did not exit after Stop()")
+	}
+}
