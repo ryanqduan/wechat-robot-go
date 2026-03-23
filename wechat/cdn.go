@@ -3,7 +3,6 @@ package wechat
 import (
 	"bytes"
 	"context"
-	"crypto/aes"
 	"crypto/md5"
 	"crypto/rand"
 	"encoding/base64"
@@ -14,76 +13,6 @@ import (
 	"net/http"
 	"net/url"
 )
-
-// generateAESKey generates a random 16-byte AES-128 key.
-func generateAESKey() ([]byte, error) {
-	key := make([]byte, 16)
-	_, err := rand.Read(key)
-	return key, err
-}
-
-// pkcs7Pad pads data to a multiple of blockSize using PKCS7.
-func pkcs7Pad(data []byte, blockSize int) []byte {
-	padding := blockSize - len(data)%blockSize
-	padtext := make([]byte, padding)
-	for i := range padtext {
-		padtext[i] = byte(padding)
-	}
-	return append(data, padtext...)
-}
-
-// pkcs7Unpad removes PKCS7 padding.
-func pkcs7Unpad(data []byte) ([]byte, error) {
-	if len(data) == 0 {
-		return nil, fmt.Errorf("empty data")
-	}
-	padding := int(data[len(data)-1])
-	if padding > len(data) || padding > aes.BlockSize || padding == 0 {
-		return nil, fmt.Errorf("invalid padding size: %d", padding)
-	}
-	for i := len(data) - padding; i < len(data); i++ {
-		if data[i] != byte(padding) {
-			return nil, fmt.Errorf("invalid padding byte")
-		}
-	}
-	return data[:len(data)-padding], nil
-}
-
-// encryptAESECB encrypts data using AES-128-ECB mode with PKCS7 padding.
-func encryptAESECB(plaintext, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, fmt.Errorf("create cipher: %w", err)
-	}
-
-	padded := pkcs7Pad(plaintext, aes.BlockSize)
-	ciphertext := make([]byte, len(padded))
-
-	for i := 0; i < len(padded); i += aes.BlockSize {
-		block.Encrypt(ciphertext[i:i+aes.BlockSize], padded[i:i+aes.BlockSize])
-	}
-
-	return ciphertext, nil
-}
-
-// decryptAESECB decrypts data using AES-128-ECB mode and removes PKCS7 padding.
-func decryptAESECB(ciphertext, key []byte) ([]byte, error) {
-	block, err := aes.NewCipher(key)
-	if err != nil {
-		return nil, fmt.Errorf("create cipher: %w", err)
-	}
-
-	if len(ciphertext)%aes.BlockSize != 0 {
-		return nil, fmt.Errorf("ciphertext length %d is not a multiple of block size %d", len(ciphertext), aes.BlockSize)
-	}
-
-	plaintext := make([]byte, len(ciphertext))
-	for i := 0; i < len(ciphertext); i += aes.BlockSize {
-		block.Decrypt(plaintext[i:i+aes.BlockSize], ciphertext[i:i+aes.BlockSize])
-	}
-
-	return pkcs7Unpad(plaintext)
-}
 
 // --- CDN API Types ---
 
@@ -208,8 +137,6 @@ func (m *MediaManager) UploadFile(ctx context.Context, data []byte, toUserID, fi
 	}
 
 	// 4. Upload encrypted data to CDN with retry
-	// Build CDN URL with filekey (same as official plugin)
-	// Note: URL encoding is essential for upload_param and filekey
 	cdnURL := fmt.Sprintf("%s/upload?encrypted_query_param=%s&filekey=%s",
 		m.cdnBaseURL, url.QueryEscape(uploadResp.UploadParam), url.QueryEscape(fileKey))
 	encryptedParam, err := m.uploadToCDN(ctx, cdnURL, encrypted)
@@ -323,7 +250,6 @@ func (m *MediaManager) DownloadFileWithKey(ctx context.Context, url string, aesK
 	}
 
 	// Decode AES key from base64
-	// Per official plugin: aes_key can be base64(16 raw bytes) or base64(32 hex chars)
 	decoded, err := base64.StdEncoding.DecodeString(aesKeyStr)
 	if err != nil {
 		return nil, fmt.Errorf("decode base64 AES key: %w", err)
@@ -375,16 +301,11 @@ func (m *MediaManager) DownloadImage(ctx context.Context, cdnBaseURL string, ima
 		cdnBaseURL, url.QueryEscape(imageItem.Media.EncryptQueryParam))
 
 	// Determine AES key source and decode
-	// Following official plugin: if imageItem.AESKey (hex) is present, convert to base64
-	// Then DownloadFileWithKey can handle both base64 formats
 	var aesKeyStr string
 	if imageItem.AESKey != "" {
-		// img.aeskey is hex-encoded (32 chars), convert to base64 for decoding
-		// Official plugin: Buffer.from(img.aeskey, "hex").toString("base64")
 		aesKeyBytes, _ := hex.DecodeString(imageItem.AESKey)
 		aesKeyStr = base64.StdEncoding.EncodeToString(aesKeyBytes)
 	} else if imageItem.Media != nil && imageItem.Media.AESKey != "" {
-		// media.aes_key is base64-encoded
 		aesKeyStr = imageItem.Media.AESKey
 	} else {
 		return nil, fmt.Errorf("no AES key found in image item")
@@ -412,150 +333,6 @@ func (m *MediaManager) downloadFromCDN(ctx context.Context, url string) ([]byte,
 	}
 
 	return io.ReadAll(resp.Body)
-}
-
-// BuildImageItem creates a MessageItem for sending an image.
-// This follows the official Weixin API format with CDNMedia structure.
-// Note: AES key format for outbound: base64(hex_string), NOT base64(raw_bytes).
-// Official plugin: Buffer.from(aeskey_hex).toString("base64") = base64 encode hex string as UTF-8.
-func (m *MediaManager) BuildImageItem(result *UploadResult, width, height int) MessageItem {
-	// Per official plugin: aes_key = base64(hex_string)
-	// NOT base64(raw_bytes)! This is counter-intuitive but critical.
-	aesKeyBase64 := base64.StdEncoding.EncodeToString([]byte(result.AESKey))
-
-	return MessageItem{
-		Type: ItemTypeImage,
-		ImageItem: &ImageItem{
-			Media: &CDNMedia{
-				EncryptQueryParam: result.EncryptedParam,
-				AESKey:            aesKeyBase64, // base64(hex_string) per official plugin
-				EncryptType:       1,            // encrypted with bundled thumbnail info
-			},
-			MidSize: result.CipherSize, // ciphertext file size
-		},
-	}
-}
-
-// BuildImageItemPtr creates an ImageItem for sending an image.
-func (m *MediaManager) BuildImageItemPtr(result *UploadResult, width, height int) *ImageItem {
-	// Per official plugin: aes_key = base64(hex_string)
-	aesKeyBase64 := base64.StdEncoding.EncodeToString([]byte(result.AESKey))
-
-	return &ImageItem{
-		Media: &CDNMedia{
-			EncryptQueryParam: result.EncryptedParam,
-			AESKey:            aesKeyBase64,
-			EncryptType:       1,
-		},
-		MidSize: result.CipherSize,
-	}
-}
-
-// BuildFileItem creates a MessageItem for sending a file.
-func (m *MediaManager) BuildFileItem(result *UploadResult, fileName string) MessageItem {
-	// Per official plugin: aes_key = base64(hex_string)
-	aesKeyBase64 := base64.StdEncoding.EncodeToString([]byte(result.AESKey))
-
-	return MessageItem{
-		Type: ItemTypeFile,
-		FileItem: &FileItem{
-			Media: &CDNMedia{
-				EncryptQueryParam: result.EncryptedParam,
-				AESKey:            aesKeyBase64,
-				EncryptType:       1,
-			},
-			FileName: fileName,
-			Length:   fmt.Sprintf("%d", result.FileSize), // plaintext size as string
-		},
-	}
-}
-
-// BuildFileItemPtr creates a FileItem for sending a file.
-func (m *MediaManager) BuildFileItemPtr(result *UploadResult, fileName string) *FileItem {
-	// Per official plugin: aes_key = base64(hex_string)
-	aesKeyBase64 := base64.StdEncoding.EncodeToString([]byte(result.AESKey))
-
-	return &FileItem{
-		Media: &CDNMedia{
-			EncryptQueryParam: result.EncryptedParam,
-			AESKey:            aesKeyBase64,
-			EncryptType:       1,
-		},
-		FileName: fileName,
-		Length:   fmt.Sprintf("%d", result.FileSize),
-	}
-}
-
-// BuildVideoItem creates a MessageItem for sending a video.
-func (m *MediaManager) BuildVideoItem(result *UploadResult, width, height, duration int) MessageItem {
-	// Per official plugin: aes_key = base64(hex_string)
-	aesKeyBase64 := base64.StdEncoding.EncodeToString([]byte(result.AESKey))
-
-	return MessageItem{
-		Type: ItemTypeVideo,
-		VideoItem: &VideoItem{
-			Media: &CDNMedia{
-				EncryptQueryParam: result.EncryptedParam,
-				AESKey:            aesKeyBase64,
-				EncryptType:       1,
-			},
-			VideoSize:   result.FileSize,
-			PlayLength:  duration,
-			ThumbWidth:  width,
-			ThumbHeight: height,
-		},
-	}
-}
-
-// BuildVoiceItem creates a MessageItem for sending a voice message.
-func (m *MediaManager) BuildVoiceItem(result *UploadResult, duration int) MessageItem {
-	// Per official plugin: aes_key = base64(hex_string)
-	aesKeyBase64 := base64.StdEncoding.EncodeToString([]byte(result.AESKey))
-
-	return MessageItem{
-		Type: ItemTypeVoice,
-		VoiceItem: &VoiceItem{
-			Media: &CDNMedia{
-				EncryptQueryParam: result.EncryptedParam,
-				AESKey:            aesKeyBase64,
-				EncryptType:       1,
-			},
-			Duration: duration, // in milliseconds
-		},
-	}
-}
-
-// BuildVoiceItemPtr creates a VoiceItem for sending a voice message.
-func (m *MediaManager) BuildVoiceItemPtr(result *UploadResult, duration int) *VoiceItem {
-	// Per official plugin: aes_key = base64(hex_string)
-	aesKeyBase64 := base64.StdEncoding.EncodeToString([]byte(result.AESKey))
-
-	return &VoiceItem{
-		Media: &CDNMedia{
-			EncryptQueryParam: result.EncryptedParam,
-			AESKey:            aesKeyBase64,
-			EncryptType:       1,
-		},
-		Duration: duration,
-	}
-}
-
-// BuildVideoItemPtr creates a VideoItem for sending a video.
-func (m *MediaManager) BuildVideoItemPtr(result *UploadResult, width, height, duration int) *VideoItem {
-	// Per official plugin: aes_key = base64(hex_string)
-	aesKeyBase64 := base64.StdEncoding.EncodeToString([]byte(result.AESKey))
-
-	return &VideoItem{
-		Media: &CDNMedia{
-			EncryptQueryParam: result.EncryptedParam,
-			AESKey:            aesKeyBase64,
-			EncryptType:       1,
-		},
-		VideoSize:   result.FileSize,
-		PlayLength:  duration,
-		ThumbWidth:  width,
-		ThumbHeight: height,
-	}
 }
 
 // DownloadVoice downloads and decrypts a voice message from a VoiceItem.
