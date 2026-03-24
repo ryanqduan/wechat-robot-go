@@ -47,6 +47,12 @@ func (c *Client) SetBaseURL(url string) {
 	c.baseURL = url
 }
 
+// HTTPClient returns the underlying HTTP client.
+// This is used by MediaManager to share the same HTTP client.
+func (c *Client) HTTPClient() *http.Client {
+	return c.httpClient
+}
+
 // generateUIN generates the X-WECHAT-UIN header value:
 // random uint32 -> decimal string -> base64 encode
 func generateUIN() string {

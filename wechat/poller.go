@@ -10,9 +10,6 @@ import (
 	"time"
 )
 
-// MessageHandler is the callback type for handling incoming messages.
-type MessageHandler func(ctx context.Context, msg *Message) error
-
 // Poller manages the long-polling loop for receiving messages.
 type Poller struct {
 	client         *Client

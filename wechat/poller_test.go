@@ -47,7 +47,7 @@ func TestPoller_ReceiveMessages(t *testing.T) {
 					GetUpdatesBuf:        "cursor1",
 					LongPollingTimeoutMs: 1000,
 				}
-				json.NewEncoder(w).Encode(resp)
+				_ = json.NewEncoder(w).Encode(resp)
 			} else {
 				// Subsequent calls: return empty (will trigger context cancel)
 				time.Sleep(50 * time.Millisecond)
@@ -56,7 +56,7 @@ func TestPoller_ReceiveMessages(t *testing.T) {
 					Messages:      []Message{},
 					GetUpdatesBuf: "cursor2",
 				}
-				json.NewEncoder(w).Encode(resp)
+				_ = json.NewEncoder(w).Encode(resp)
 			}
 		}
 	}))
@@ -93,7 +93,7 @@ func TestPoller_CursorUpdate(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/ilink/bot/getupdates" {
 			var req GetUpdatesRequest
-			json.NewDecoder(r.Body).Decode(&req)
+			_ = json.NewDecoder(r.Body).Decode(&req)
 			mu.Lock()
 			cursors = append(cursors, req.GetUpdatesBuf)
 			mu.Unlock()
@@ -104,7 +104,7 @@ func TestPoller_CursorUpdate(t *testing.T) {
 				GetUpdatesBuf:        "new_cursor_" + req.GetUpdatesBuf,
 				LongPollingTimeoutMs: 100,
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -184,7 +184,7 @@ func TestPoller_EmptyResponse(t *testing.T) {
 				GetUpdatesBuf:        "cursor",
 				LongPollingTimeoutMs: 50,
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -233,14 +233,14 @@ func TestPoller_OnlyUserMessages(t *testing.T) {
 					GetUpdatesBuf:        "cursor1",
 					LongPollingTimeoutMs: 100,
 				}
-				json.NewEncoder(w).Encode(resp)
+				_ = json.NewEncoder(w).Encode(resp)
 			} else {
 				resp := GetUpdatesResponse{
 					Ret:           0,
 					Messages:      []Message{},
 					GetUpdatesBuf: "cursor2",
 				}
-				json.NewEncoder(w).Encode(resp)
+				_ = json.NewEncoder(w).Encode(resp)
 			}
 		}
 	}))
@@ -306,7 +306,7 @@ func TestPoller_SessionExpired(t *testing.T) {
 			resp := GetUpdatesResponse{
 				Ret: -14,
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -346,7 +346,7 @@ func TestPoller_TimeoutNotCountedAsFailure(t *testing.T) {
 				GetUpdatesBuf:        "cursor",
 				LongPollingTimeoutMs: 50, // Short timeout for test
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -395,7 +395,7 @@ func TestPoller_CursorUpdateAfterProcessing(t *testing.T) {
 
 		if r.URL.Path == "/ilink/bot/getupdates" {
 			var req GetUpdatesRequest
-			json.NewDecoder(r.Body).Decode(&req)
+			_ = json.NewDecoder(r.Body).Decode(&req)
 			mu.Lock()
 			cursors = append(cursors, req.GetUpdatesBuf)
 			operations = append(operations, "poll_"+req.GetUpdatesBuf)
@@ -417,7 +417,7 @@ func TestPoller_CursorUpdateAfterProcessing(t *testing.T) {
 					GetUpdatesBuf:        "cursor_after_msg",
 					LongPollingTimeoutMs: 50,
 				}
-				json.NewEncoder(w).Encode(resp)
+				_ = json.NewEncoder(w).Encode(resp)
 			} else {
 				// Second call should have the updated cursor
 				resp := GetUpdatesResponse{
@@ -425,7 +425,7 @@ func TestPoller_CursorUpdateAfterProcessing(t *testing.T) {
 					Messages:      []Message{},
 					GetUpdatesBuf: "cursor_final",
 				}
-				json.NewEncoder(w).Encode(resp)
+				_ = json.NewEncoder(w).Encode(resp)
 			}
 		}
 	}))

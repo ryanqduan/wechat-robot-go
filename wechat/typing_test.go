@@ -18,7 +18,7 @@ func TestTypingManager_GetConfig(t *testing.T) {
 				Ret:          0,
 				TypingTicket: "test-ticket-abc123",
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -46,7 +46,7 @@ func TestTypingManager_GetConfigCache(t *testing.T) {
 				Ret:          0,
 				TypingTicket: "cached-ticket",
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -93,7 +93,7 @@ func TestTypingManager_GetConfigCacheExpiry(t *testing.T) {
 				Ret:          0,
 				TypingTicket: "ticket-" + string(rune('0'+count)),
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -132,13 +132,13 @@ func TestTypingManager_SendTyping(t *testing.T) {
 				Ret:          0,
 				TypingTicket: "typing-ticket-xyz",
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 
 		case "/ilink/bot/sendtyping":
 			typingRequest = &SendTypingRequest{}
 			json.NewDecoder(r.Body).Decode(typingRequest)
 			resp := SendTypingResponse{Ret: 0}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -178,13 +178,13 @@ func TestTypingManager_StopTyping(t *testing.T) {
 				Ret:          0,
 				TypingTicket: "stop-ticket",
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 
 		case "/ilink/bot/sendtyping":
 			typingRequest = &SendTypingRequest{}
 			json.NewDecoder(r.Body).Decode(typingRequest)
 			resp := SendTypingResponse{Ret: 0}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -217,7 +217,7 @@ func TestTypingManager_GetConfigError(t *testing.T) {
 				Ret:    -1,
 				ErrMsg: "config error",
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()
@@ -248,14 +248,14 @@ func TestTypingManager_SendTypingError(t *testing.T) {
 				Ret:          0,
 				TypingTicket: "ticket",
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 
 		case "/ilink/bot/sendtyping":
 			resp := SendTypingResponse{
 				Ret:    -2,
 				ErrMsg: "typing error",
 			}
-			json.NewEncoder(w).Encode(resp)
+			_ = json.NewEncoder(w).Encode(resp)
 		}
 	}))
 	defer server.Close()

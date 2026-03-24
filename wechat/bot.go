@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"sync"
+
+	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/media"
 )
 
 // ErrNoHandler is returned when Run is called without a registered message handler.
@@ -80,15 +82,15 @@ func NewBot(opts ...Option) *Bot {
 	typing := NewTypingManager(client, cfg.logger)
 
 	// 6. Create MediaManager and set CDN base URL
-	media := NewMediaManager(client, cfg.logger)
-	media.SetCDNBaseURL(cfg.cdnBaseURL)
+	mediaManager := media.NewMediaManager(client, client.HTTPClient(), cfg.logger)
+	mediaManager.SetCDNBaseURL(cfg.cdnBaseURL)
 
 	return &Bot{
 		config:        cfg,
 		client:        client,
 		auth:          auth,
 		typing:        typing,
-		media:         media,
+		media:         mediaManager,
 		contextTokens: contextTokens,
 	}
 }

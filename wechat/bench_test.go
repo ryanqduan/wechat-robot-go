@@ -2,6 +2,9 @@ package wechat
 
 import (
 	"testing"
+
+	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/crypto"
+	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/media"
 )
 
 func BenchmarkEncryptAESECB(b *testing.B) {
@@ -10,7 +13,7 @@ func BenchmarkEncryptAESECB(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := encryptAESECB(data, key)
+		_, err := crypto.EncryptAESECB(data, key)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -20,11 +23,11 @@ func BenchmarkEncryptAESECB(b *testing.B) {
 func BenchmarkDecryptAESECB(b *testing.B) {
 	key := []byte("0123456789abcdef")
 	data := make([]byte, 1024*1024)
-	encrypted, _ := encryptAESECB(data, key)
+	encrypted, _ := crypto.EncryptAESECB(data, key)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := decryptAESECB(encrypted, key)
+		_, err := crypto.DecryptAESECB(encrypted, key)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -36,32 +39,25 @@ func BenchmarkPKCS7Pad(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_ = pkcs7Pad(data, 16)
+		_ = crypto.PKCS7Pad(data, 16)
 	}
 }
 
 func BenchmarkGenerateAESKey(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := generateAESKey()
+		_, err := crypto.GenerateAESKey()
 		if err != nil {
 			b.Fatal(err)
 		}
 	}
 }
 
-func BenchmarkGenerateFileKey(b *testing.B) {
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_ = generateFileKey()
-	}
-}
-
 func BenchmarkBuildImageItem(b *testing.B) {
-	logger := NewClient("http://unused", nil, nil, "1.0.3")
-	manager := NewMediaManager(logger, nil)
+	client := NewClient("http://unused", nil, nil, "1.0.3")
+	manager := media.NewMediaManager(client, client.HTTPClient(), nil)
 
-	result := &UploadResult{
+	result := &media.UploadResult{
 		AESKey:         "0123456789abcdef0123456789abcdef",
 		FileKey:        "fedcba9876543210fedcba9876543210",
 		EncryptedParam: "test-encrypted-param",
@@ -75,14 +71,14 @@ func BenchmarkBuildImageItem(b *testing.B) {
 	}
 }
 
-func BenchmarkDownloadFileWithKey(b *testing.B) {
+func BenchmarkDecryptionOverhead(b *testing.B) {
 	// This benchmark measures the decryption overhead
 	key := []byte("0123456789abcdef")
 	data := make([]byte, 1024)
-	encrypted, _ := encryptAESECB(data, key)
+	encrypted, _ := crypto.EncryptAESECB(data, key)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = decryptAESECB(encrypted, key)
+		_, _ = crypto.DecryptAESECB(encrypted, key)
 	}
 }
