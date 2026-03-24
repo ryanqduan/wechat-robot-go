@@ -62,13 +62,8 @@ func FindSplitPoint(text string, maxLen int) int {
 	// 4. Space
 	// Start from maxLen and work backwards
 
-	searchStart := maxLen
-	if searchStart > len(text) {
-		searchStart = len(text)
-	}
-
 	// Search window: last 100 chars before maxLen
-	searchStart = maxLen - 100
+	searchStart := maxLen - 100
 	if searchStart < 0 {
 		searchStart = 0
 	}

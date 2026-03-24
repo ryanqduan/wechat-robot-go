@@ -160,9 +160,7 @@ func (m *MediaManager) UploadFile(ctx context.Context, data []byte, toUserID, fi
 // generateFileKey generates a random 16-byte hex string for CDN upload.
 func generateFileKey() string {
 	b := make([]byte, 16)
-	if _, err := rand.Read(b); err != nil {
-		// rand.Read should never fail with crypto/rand, but handle gracefully
-	}
+	_, _ = rand.Read(b) // rand.Read should never fail with crypto/rand
 	return hex.EncodeToString(b)
 }
 
