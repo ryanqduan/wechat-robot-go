@@ -13,7 +13,7 @@ Thank you for your interest in wechat-robot-go! Issues and Pull Requests are wel
 
 ```bash
 # Clone the repository
-git clone https://github.com/SpellingDragon/wechat-robot-go.git
+git clone https://github.com/ryanqduan/wechat-robot-go.git
 cd wechat-robot-go
 
 # Install dependencies
@@ -181,7 +181,7 @@ This project is licensed under the MIT License. Contributed code will be license
 
 ```bash
 # 克隆仓库
-git clone https://github.com/SpellingDragon/wechat-robot-go.git
+git clone https://github.com/ryanqduan/wechat-robot-go.git
 cd wechat-robot-go
 
 # 安装依赖

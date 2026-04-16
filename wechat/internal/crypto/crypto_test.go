@@ -5,7 +5,7 @@ import (
 	"crypto/aes"
 	"testing"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/crypto"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/crypto"
 )
 
 func TestGenerateAESKey(t *testing.T) {

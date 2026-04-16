@@ -631,4 +631,4 @@ openclaw-weixin-{timestamp_hex}-{random_hex}
 
 - [架构设计](Architecture)
 - [中间件指南](Middleware-Guide)
-- [GitHub 仓库](https://github.com/SpellingDragon/wechat-robot-go)
+- [GitHub 仓库](https://github.com/ryanqduan/wechat-robot-go)

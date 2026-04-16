@@ -13,8 +13,8 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/crypto"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/model"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/crypto"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/model"
 )
 
 // --- CDN API Types ---

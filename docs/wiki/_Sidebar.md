@@ -7,6 +7,6 @@
 
 ## 快速链接
 
-* [源码仓库](https://github.com/SpellingDragon/wechat-robot-go)
-* [Go 文档](https://pkg.go.dev/github.com/SpellingDragon/wechat-robot-go)
-* [Issue 反馈](https://github.com/SpellingDragon/wechat-robot-go/issues)
+* [源码仓库](https://github.com/ryanqduan/wechat-robot-go)
+* [Go 文档](https://pkg.go.dev/github.com/ryanqduan/wechat-robot-go)
+* [Issue 反馈](https://github.com/ryanqduan/wechat-robot-go/issues)

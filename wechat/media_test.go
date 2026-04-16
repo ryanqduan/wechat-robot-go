@@ -11,9 +11,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/crypto"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/media"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/model"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/crypto"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/media"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/model"
 )
 
 // Tests for MediaManager through the public API (types.go)

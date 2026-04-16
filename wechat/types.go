@@ -1,11 +1,11 @@
 package wechat
 
 import (
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/media"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/middleware"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/model"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/store"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/text"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/media"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/middleware"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/model"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/store"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/text"
 )
 
 // --- Message types from model package ---

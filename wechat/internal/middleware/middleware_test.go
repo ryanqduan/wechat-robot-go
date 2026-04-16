@@ -8,8 +8,8 @@ import (
 	"sync/atomic"
 	"testing"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/middleware"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/model"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/middleware"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/model"
 )
 
 func TestChain(t *testing.T) {

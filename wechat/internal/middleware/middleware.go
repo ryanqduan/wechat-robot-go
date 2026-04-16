@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"runtime/debug"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/model"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/model"
 )
 
 // Middleware wraps a MessageHandler to add cross-cutting concerns.

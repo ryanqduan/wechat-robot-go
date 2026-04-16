@@ -117,10 +117,10 @@ SDK 采用三层架构：
 
 ```go
 // ❌ 外部代码无法这样导入
-import "github.com/SpellingDragon/wechat-robot-go/wechat/internal/crypto"
+import "github.com/ryanqduan/wechat-robot-go/wechat/internal/crypto"
 
 // ✅ 只能通过主包的公开 API 使用
-import "github.com/SpellingDragon/wechat-robot-go/wechat"
+import "github.com/ryanqduan/wechat-robot-go/wechat"
 ```
 
 ### 2. Type Alias 向后兼容
@@ -132,9 +132,9 @@ import "github.com/SpellingDragon/wechat-robot-go/wechat"
 package wechat
 
 import (
-    "github.com/SpellingDragon/wechat-robot-go/wechat/internal/middleware"
-    "github.com/SpellingDragon/wechat-robot-go/wechat/internal/model"
-    "github.com/SpellingDragon/wechat-robot-go/wechat/internal/store"
+    "github.com/ryanqduan/wechat-robot-go/wechat/internal/middleware"
+    "github.com/ryanqduan/wechat-robot-go/wechat/internal/model"
+    "github.com/ryanqduan/wechat-robot-go/wechat/internal/store"
 )
 
 // Type aliases for backward compatibility

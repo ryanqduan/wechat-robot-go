@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/media"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/media"
 )
 
 // ErrNoHandler is returned when Run is called without a registered message handler.

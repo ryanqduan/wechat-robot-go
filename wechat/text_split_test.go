@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/text"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/text"
 )
 
 func TestSendLongText(t *testing.T) {

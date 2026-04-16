@@ -29,7 +29,7 @@
 ## 安装
 
 ```bash
-go get github.com/SpellingDragon/wechat-robot-go
+go get github.com/ryanqduan/wechat-robot-go
 ```
 
 ## 快速开始
@@ -44,7 +44,7 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/SpellingDragon/wechat-robot-go/wechat"
+    "github.com/ryanqduan/wechat-robot-go/wechat"
 )
 
 func main() {
@@ -105,8 +105,8 @@ func main() {
 
 ## 关联资源
 
-- **源码仓库**: [GitHub - SpellingDragon/wechat-robot-go](https://github.com/SpellingDragon/wechat-robot-go)
-- **Go 文档**: [pkg.go.dev](https://pkg.go.dev/github.com/SpellingDragon/wechat-robot-go)
+- **源码仓库**: [GitHub - ryanqduan/wechat-robot-go](https://github.com/ryanqduan/wechat-robot-go)
+- **Go 文档**: [pkg.go.dev](https://pkg.go.dev/github.com/ryanqduan/wechat-robot-go)
 - **协议参考**: [iLink Bot API 协议分析](https://github.com/hao-ji-xing/openclaw-weixin/blob/main/weixin-bot-api.md)
 
 ## 许可证

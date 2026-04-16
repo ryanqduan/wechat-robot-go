@@ -11,7 +11,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat"
+	"github.com/ryanqduan/wechat-robot-go/wechat"
 )
 
 // AIAgent represents an AI service integration.

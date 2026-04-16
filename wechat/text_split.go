@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/text"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/text"
 )
 
 // SendLongText sends a long text message by automatically splitting it into multiple messages.

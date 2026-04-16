@@ -1,11 +1,11 @@
 # wechat-robot-go
 
-[![CI](https://img.shields.io/github/actions/workflow/status/SpellingDragon/wechat-robot-go/ci.yml?branch=main&logo=github)](https://github.com/SpellingDragon/wechat-robot-go/actions)
-[![Latest Release](https://img.shields.io/github/v/release/SpellingDragon/wechat-robot-go?logo=github)](https://github.com/SpellingDragon/wechat-robot-go/releases/latest)
-[![Go Report Card](https://goreportcard.com/badge/github.com/SpellingDragon/wechat-robot-go)](https://goreportcard.com/report/github.com/SpellingDragon/wechat-robot-go)
-[![GoDoc](https://pkg.go.dev/badge/github.com/SpellingDragon/wechat-robot-go.svg)](https://pkg.go.dev/github.com/SpellingDragon/wechat-robot-go)
+[![CI](https://img.shields.io/github/actions/workflow/status/ryanqduan/wechat-robot-go/ci.yml?branch=main&logo=github)](https://github.com/ryanqduan/wechat-robot-go/actions)
+[![Latest Release](https://img.shields.io/github/v/release/ryanqduan/wechat-robot-go?logo=github)](https://github.com/ryanqduan/wechat-robot-go/releases/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ryanqduan/wechat-robot-go)](https://goreportcard.com/report/github.com/ryanqduan/wechat-robot-go)
+[![GoDoc](https://pkg.go.dev/badge/github.com/ryanqduan/wechat-robot-go.svg)](https://pkg.go.dev/github.com/ryanqduan/wechat-robot-go)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Go Version](https://img.shields.io/badge/Go-1.21%2B-blue)](https://github.com/SpellingDragon/wechat-robot-go)
+[![Go Version](https://img.shields.io/badge/Go-1.21%2B-blue)](https://github.com/ryanqduan/wechat-robot-go)
 
 > 基于腾讯 iLink Bot API 的微信机器人 Go SDK，几行代码接入微信消息。
 
@@ -13,7 +13,7 @@
 
 ---
 
-[iLink API 参考](https://github.com/SpellingDragon/wechat-robot-go/wiki/iLink-API-Reference)
+[iLink API 参考](https://github.com/ryanqduan/wechat-robot-go/wiki/iLink-API-Reference)
 
 ## ✨ 特性
 
@@ -34,7 +34,7 @@
 ### 安装
 
 ```bash
-go get github.com/SpellingDragon/wechat-robot-go
+go get github.com/ryanqduan/wechat-robot-go
 ```
 
 ### 最简示例
@@ -49,7 +49,7 @@ import (
     "os/signal"
     "syscall"
 
-    "github.com/SpellingDragon/wechat-robot-go/wechat"
+    "github.com/ryanqduan/wechat-robot-go/wechat"
 )
 
 func main() {
@@ -237,9 +237,9 @@ wechat/
 
 ## 📚 文档
 
-- [Wiki 首页](https://github.com/SpellingDragon/wechat-robot-go/wiki)
-- [架构设计](https://github.com/SpellingDragon/wechat-robot-go/wiki/Architecture)
-- [中间件指南](https://github.com/SpellingDragon/wechat-robot-go/wiki/Middleware-Guide)
+- [Wiki 首页](https://github.com/ryanqduan/wechat-robot-go/wiki)
+- [架构设计](https://github.com/ryanqduan/wechat-robot-go/wiki/Architecture)
+- [中间件指南](https://github.com/ryanqduan/wechat-robot-go/wiki/Middleware-Guide)
 
 ---
 
@@ -255,7 +255,7 @@ MIT License - 详见 [LICENSE](LICENSE) 文件
 
 Go SDK for WeChat Bot based on Tencent's official iLink Bot API.
 
-[iLink API Reference](https://github.com/SpellingDragon/wechat-robot-go/wiki/iLink-API-Reference)
+[iLink API Reference](https://github.com/ryanqduan/wechat-robot-go/wiki/iLink-API-Reference)
 
 ## Features
 
@@ -272,7 +272,7 @@ Go SDK for WeChat Bot based on Tencent's official iLink Bot API.
 ## Quick Start
 
 ```bash
-go get github.com/SpellingDragon/wechat-robot-go
+go get github.com/ryanqduan/wechat-robot-go
 ```
 
 ```go
@@ -286,17 +286,17 @@ bot.Run(ctx)
 
 ## Documentation
 
-- [Wiki Home](https://github.com/SpellingDragon/wechat-robot-go/wiki)
-- [Architecture](https://github.com/SpellingDragon/wechat-robot-go/wiki/Architecture)
-- [Middleware Guide](https://github.com/SpellingDragon/wechat-robot-go/wiki/Middleware-Guide)
-- [iLink API Reference](https://github.com/SpellingDragon/wechat-robot-go/wiki/iLink-API-Reference)
+- [Wiki Home](https://github.com/ryanqduan/wechat-robot-go/wiki)
+- [Architecture](https://github.com/ryanqduan/wechat-robot-go/wiki/Architecture)
+- [Middleware Guide](https://github.com/ryanqduan/wechat-robot-go/wiki/Middleware-Guide)
+- [iLink API Reference](https://github.com/ryanqduan/wechat-robot-go/wiki/iLink-API-Reference)
 
 ---
 
 <a name="中文"></a>
 
 # 中文
-[iLink API Reference](https://github.com/SpellingDragon/wechat-robot-go/wiki/iLink-API-Reference)
+[iLink API Reference](https://github.com/ryanqduan/wechat-robot-go/wiki/iLink-API-Reference)
 
 基于腾讯 iLink Bot API 的微信机器人 Go SDK，几行代码接入微信消息。
 

@@ -3,8 +3,8 @@ package wechat
 import (
 	"testing"
 
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/crypto"
-	"github.com/SpellingDragon/wechat-robot-go/wechat/internal/media"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/crypto"
+	"github.com/ryanqduan/wechat-robot-go/wechat/internal/media"
 )
 
 func BenchmarkEncryptAESECB(b *testing.B) {
