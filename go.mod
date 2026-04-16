@@ -1,3 +1,3 @@
-module github.com/SpellingDragon/wechat-robot-go
+module github.com/ryanqduan/wechat-robot-go
 
 go 1.21
