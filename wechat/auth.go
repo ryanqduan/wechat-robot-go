@@ -3,6 +3,7 @@ package wechat
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"os"
@@ -166,6 +167,24 @@ type GetConfigResponse struct {
 	ErrCode      int    `json:"errcode,omitempty"`
 	ErrMsg       string `json:"errmsg,omitempty"`
 	TypingTicket string `json:"typing_ticket"`
+}
+
+func (a *Auth) Setup(ctx context.Context) error {
+	if a.store != nil {
+		creds, err := a.store.Load()
+		if err != nil {
+			a.logger.Warn("failed to load credentials", "error", err)
+			return err
+		} else if creds != nil && creds.BotToken != "" {
+			// Set token temporarily to validate
+			a.client.SetToken(creds.BotToken)
+			if creds.BaseURL != "" {
+				a.client.SetBaseURL(creds.BaseURL)
+			}
+			return nil
+		}
+	}
+	return errors.New("token store is not set")
 }
 
 // Login performs the full login flow:

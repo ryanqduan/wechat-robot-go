@@ -282,6 +282,9 @@ func TestBot_Reply(t *testing.T) {
 
 	bot := NewBot(WithBaseURL(server.URL))
 	bot.client.SetToken("test-token")
+	if err := bot.contextTokens.Save("user-123", "ctx-token-typing"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
 
 	msg := &Message{
 		FromUserID:   "user-123",
@@ -344,8 +347,8 @@ func TestBot_SendTyping(t *testing.T) {
 	if typingRequest == nil {
 		t.Fatal("no typing request sent")
 	}
-	if typingRequest.ToUserID != "user-123" {
-		t.Errorf("ToUserID = %q, want %q", typingRequest.ToUserID, "user-123")
+	if typingRequest.ILinkUserID != "user-123" {
+		t.Errorf("ILinkUserID = %q, want %q", typingRequest.ILinkUserID, "user-123")
 	}
 	if typingRequest.TypingTicket != "typing-ticket-123" {
 		t.Errorf("TypingTicket = %q, want %q", typingRequest.TypingTicket, "typing-ticket-123")
@@ -381,6 +384,9 @@ func TestBot_StopTyping(t *testing.T) {
 
 	bot := NewBot(WithBaseURL(server.URL))
 	bot.client.SetToken("test-token")
+	if err := bot.contextTokens.Save("user-456", "ctx-token-stop"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
 
 	ctx := context.Background()
 	err := bot.StopTyping(ctx, "user-456")
@@ -391,8 +397,8 @@ func TestBot_StopTyping(t *testing.T) {
 	if typingRequest == nil {
 		t.Fatal("no typing request sent")
 	}
-	if typingRequest.ToUserID != "user-456" {
-		t.Errorf("ToUserID = %q, want %q", typingRequest.ToUserID, "user-456")
+	if typingRequest.ILinkUserID != "user-456" {
+		t.Errorf("ILinkUserID = %q, want %q", typingRequest.ILinkUserID, "user-456")
 	}
 	if typingRequest.Status != TypingStatusStop {
 		t.Errorf("Status = %d, want %d", typingRequest.Status, TypingStatusStop)

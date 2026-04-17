@@ -4,20 +4,19 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"math/big"
+	"time"
 )
 
 // generateClientID generates a unique client ID for message tracking.
-// Format: openclaw-weixin-{timestamp36}-{random}
+// Format: nanobot-{timestamp_ms}-{4_digit_random}
 func generateClientID() string {
-	// Generate random part (8 characters)
-	b := make([]byte, 4)
-	_, _ = rand.Read(b) // rand.Read should never fail with crypto/rand
-	randomPart := fmt.Sprintf("%x", b)
-
-	// For timestamp, use a simple counter or random
-	timestampPart := fmt.Sprintf("%x", len(b))
-
-	return fmt.Sprintf("openclaw-weixin-%s-%s", timestampPart, randomPart)
+	randomPart := 1000
+	n, err := rand.Int(rand.Reader, big.NewInt(9000))
+	if err == nil {
+		randomPart += int(n.Int64())
+	}
+	return fmt.Sprintf("nanobot-%d-%04d", time.Now().UnixMilli(), randomPart)
 }
 
 // SendText sends a text message to a user.

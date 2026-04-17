@@ -84,7 +84,7 @@ func NewBot(opts ...Option) *Bot {
 	}
 
 	// 5. Create TypingManager
-	typing := NewTypingManager(client, cfg.logger)
+	typing := NewTypingManager(client, contextTokens, cfg.logger)
 
 	// 6. Create MediaManager and set CDN base URL
 	mediaManager := media.NewMediaManager(client, client.HTTPClient(), cfg.logger)
@@ -106,6 +106,10 @@ func NewBot(opts ...Option) *Bot {
 // If onQRCode is nil, the QR code URL is logged.
 func (b *Bot) Login(ctx context.Context, onQRCode func(qrCodeImgContent string)) error {
 	return b.auth.Login(ctx, onQRCode)
+}
+
+func (b *Bot) Setup(ctx context.Context) error {
+	return b.auth.Setup(ctx)
 }
 
 // OnMessage registers a handler for incoming user messages.

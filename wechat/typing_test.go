@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -24,9 +25,13 @@ func TestTypingManager_GetConfig(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
-	tm := NewTypingManager(client, slog.Default())
+	store := NewMemoryContextTokenStore()
+	if err := store.Save("user123", "ctx-123"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
+	tm := NewTypingManager(client, store, slog.Default())
 
-	ticket, err := tm.GetConfig(context.Background())
+	ticket, err := tm.GetConfig(context.Background(), "user123")
 	if err != nil {
 		t.Fatalf("GetConfig failed: %v", err)
 	}
@@ -52,22 +57,26 @@ func TestTypingManager_GetConfigCache(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
-	tm := NewTypingManager(client, slog.Default())
+	store := NewMemoryContextTokenStore()
+	if err := store.Save("user123", "ctx-123"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
+	tm := NewTypingManager(client, store, slog.Default())
 
 	// First call - should hit server
-	ticket1, err := tm.GetConfig(context.Background())
+	ticket1, err := tm.GetConfig(context.Background(), "user123")
 	if err != nil {
 		t.Fatalf("first GetConfig failed: %v", err)
 	}
 
 	// Second call - should use cache
-	ticket2, err := tm.GetConfig(context.Background())
+	ticket2, err := tm.GetConfig(context.Background(), "user123")
 	if err != nil {
 		t.Fatalf("second GetConfig failed: %v", err)
 	}
 
 	// Third call - should still use cache
-	ticket3, err := tm.GetConfig(context.Background())
+	ticket3, err := tm.GetConfig(context.Background(), "user123")
 	if err != nil {
 		t.Fatalf("third GetConfig failed: %v", err)
 	}
@@ -91,7 +100,7 @@ func TestTypingManager_GetConfigCacheExpiry(t *testing.T) {
 			count := atomic.AddInt32(&requestCount, 1)
 			resp := GetConfigResponse{
 				Ret:          0,
-				TypingTicket: "ticket-" + string(rune('0'+count)),
+				TypingTicket: "ticket-" + strconv.Itoa(int(count)),
 			}
 			_ = json.NewEncoder(w).Encode(resp)
 		}
@@ -99,10 +108,14 @@ func TestTypingManager_GetConfigCacheExpiry(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
-	tm := NewTypingManager(client, slog.Default())
+	store := NewMemoryContextTokenStore()
+	if err := store.Save("user123", "ctx-123"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
+	tm := NewTypingManager(client, store, slog.Default())
 
 	// First call
-	_, err := tm.GetConfig(context.Background())
+	_, err := tm.GetConfig(context.Background(), "user123")
 	if err != nil {
 		t.Fatalf("first GetConfig failed: %v", err)
 	}
@@ -111,7 +124,7 @@ func TestTypingManager_GetConfigCacheExpiry(t *testing.T) {
 	tm.ClearCache()
 
 	// Second call - should hit server again
-	_, err = tm.GetConfig(context.Background())
+	_, err = tm.GetConfig(context.Background(), "user123")
 	if err != nil {
 		t.Fatalf("second GetConfig failed: %v", err)
 	}
@@ -144,7 +157,11 @@ func TestTypingManager_SendTyping(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
-	tm := NewTypingManager(client, slog.Default())
+	store := NewMemoryContextTokenStore()
+	if err := store.Save("user123", "ctx-123"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
+	tm := NewTypingManager(client, store, slog.Default())
 
 	err := tm.SendTyping(context.Background(), "user123")
 	if err != nil {
@@ -155,8 +172,8 @@ func TestTypingManager_SendTyping(t *testing.T) {
 		t.Fatal("typing request was not sent")
 	}
 
-	if typingRequest.ToUserID != "user123" {
-		t.Errorf("expected to_user_id 'user123', got '%s'", typingRequest.ToUserID)
+	if typingRequest.ILinkUserID != "user123" {
+		t.Errorf("expected ilink_user_id 'user123', got '%s'", typingRequest.ILinkUserID)
 	}
 
 	if typingRequest.TypingTicket != "typing-ticket-xyz" {
@@ -190,7 +207,11 @@ func TestTypingManager_StopTyping(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
-	tm := NewTypingManager(client, slog.Default())
+	store := NewMemoryContextTokenStore()
+	if err := store.Save("user456", "ctx-456"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
+	tm := NewTypingManager(client, store, slog.Default())
 
 	err := tm.StopTyping(context.Background(), "user456")
 	if err != nil {
@@ -201,8 +222,8 @@ func TestTypingManager_StopTyping(t *testing.T) {
 		t.Fatal("typing request was not sent")
 	}
 
-	if typingRequest.ToUserID != "user456" {
-		t.Errorf("expected to_user_id 'user456', got '%s'", typingRequest.ToUserID)
+	if typingRequest.ILinkUserID != "user456" {
+		t.Errorf("expected ilink_user_id 'user456', got '%s'", typingRequest.ILinkUserID)
 	}
 
 	if typingRequest.Status != TypingStatusStop {
@@ -223,9 +244,13 @@ func TestTypingManager_GetConfigError(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
-	tm := NewTypingManager(client, slog.Default())
+	store := NewMemoryContextTokenStore()
+	if err := store.Save("user123", "ctx-123"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
+	tm := NewTypingManager(client, store, slog.Default())
 
-	_, err := tm.GetConfig(context.Background())
+	_, err := tm.GetConfig(context.Background(), "user123")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -261,7 +286,11 @@ func TestTypingManager_SendTypingError(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
-	tm := NewTypingManager(client, slog.Default())
+	store := NewMemoryContextTokenStore()
+	if err := store.Save("user", "ctx-user"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
+	tm := NewTypingManager(client, store, slog.Default())
 
 	err := tm.SendTyping(context.Background(), "user")
 	if err == nil {
@@ -286,12 +315,16 @@ func TestTypingManager_ContextCancel(t *testing.T) {
 	defer server.Close()
 
 	client := NewClient(server.URL, server.Client(), slog.Default(), "1.0.3")
-	tm := NewTypingManager(client, slog.Default())
+	store := NewMemoryContextTokenStore()
+	if err := store.Save("user-timeout", "ctx-timeout"); err != nil {
+		t.Fatalf("save context token failed: %v", err)
+	}
+	tm := NewTypingManager(client, store, slog.Default())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Millisecond)
 	defer cancel()
 
-	_, err := tm.GetConfig(ctx)
+	_, err := tm.GetConfig(ctx, "user-timeout")
 	if err == nil {
 		t.Fatal("expected error due to context timeout")
 	}
