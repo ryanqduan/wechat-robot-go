@@ -107,6 +107,7 @@ func (p *Poller) Run(ctx context.Context) error {
 			p.logger.Warn("poll error",
 				"error", err,
 				"consecutive_fails", consecutiveFails,
+				"token", p.client.Token(),
 			)
 
 			// After 3 consecutive failures, backoff for 30 seconds
@@ -130,6 +131,7 @@ func (p *Poller) Run(ctx context.Context) error {
 		p.logger.Info("poll response",
 			"message_count", len(resp.Messages),
 			"timeout_ms", resp.LongPollingTimeoutMs,
+			"token", p.client.Token(),
 		)
 
 		// Update HTTP timeout based on server's longpolling_timeout_ms (with minimum protection)
@@ -156,6 +158,7 @@ func (p *Poller) Run(ctx context.Context) error {
 				p.logger.Error("handler error",
 					"error", err,
 					"from_user_id", msg.FromUserID,
+					"token", p.client.Token(),
 				)
 				failedCount++
 				// Continue processing other messages even if one fails
@@ -169,6 +172,7 @@ func (p *Poller) Run(ctx context.Context) error {
 			"processed", processedCount,
 			"failed", failedCount,
 			"total", len(resp.Messages),
+			"token", p.client.Token(),
 		)
 
 		// Update cursor AFTER processing all messages
