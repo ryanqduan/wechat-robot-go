@@ -83,7 +83,7 @@ func (p *Poller) Run(ctx context.Context) error {
 
 			// Check for session expired
 			if IsSessionExpired(err) {
-				p.logger.Error("session expired", "error", err)
+				p.logger.Warn("session expired", "error", err)
 				return ErrSessionExpired
 			}
 
@@ -93,7 +93,7 @@ func (p *Poller) Run(ctx context.Context) error {
 				(errors.As(err, &netErr) && netErr.Timeout())
 
 			if isTimeout {
-				p.logger.Debug("poll timeout, reconnecting")
+				p.logger.Warn("poll timeout, reconnecting")
 				consecutiveFails = 0 // Reset! This is normal behavior
 				continue
 			}
@@ -127,7 +127,7 @@ func (p *Poller) Run(ctx context.Context) error {
 		// Reset consecutive fails on success
 		consecutiveFails = 0
 
-		p.logger.Debug("poll response",
+		p.logger.Info("poll response",
 			"message_count", len(resp.Messages),
 			"timeout_ms", resp.LongPollingTimeoutMs,
 		)
@@ -165,7 +165,7 @@ func (p *Poller) Run(ctx context.Context) error {
 			p.wg.Done()
 		}
 
-		p.logger.Debug("messages processed",
+		p.logger.Info("messages processed",
 			"processed", processedCount,
 			"failed", failedCount,
 			"total", len(resp.Messages),
