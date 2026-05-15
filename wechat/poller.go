@@ -83,7 +83,7 @@ func (p *Poller) Run(ctx context.Context) error {
 
 			// Check for session expired
 			if IsSessionExpired(err) {
-				p.logger.Warn("session expired", "error", err)
+				p.logger.Error("session expired", "error", err)
 				return ErrSessionExpired
 			}
 
@@ -93,7 +93,7 @@ func (p *Poller) Run(ctx context.Context) error {
 				(errors.As(err, &netErr) && netErr.Timeout())
 
 			if isTimeout {
-				p.logger.Warn("poll timeout, reconnecting")
+				p.logger.Debug("poll timeout, reconnecting")
 				consecutiveFails = 0 // Reset! This is normal behavior
 				continue
 			}
@@ -112,7 +112,7 @@ func (p *Poller) Run(ctx context.Context) error {
 
 			// After 3 consecutive failures, backoff for 30 seconds
 			if consecutiveFails >= maxConsecutiveFails {
-				p.logger.Info("backing off after consecutive failures", "delay", backoffDelay)
+				p.logger.Warn("backing off after consecutive failures", "delay", backoffDelay)
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
@@ -128,7 +128,7 @@ func (p *Poller) Run(ctx context.Context) error {
 		// Reset consecutive fails on success
 		consecutiveFails = 0
 
-		p.logger.Info("poll response",
+		p.logger.Debug("poll response",
 			"message_count", len(resp.Messages),
 			"timeout_ms", resp.LongPollingTimeoutMs,
 			"token", p.client.Token(),
@@ -168,7 +168,7 @@ func (p *Poller) Run(ctx context.Context) error {
 			p.wg.Done()
 		}
 
-		p.logger.Info("messages processed",
+		p.logger.Debug("messages processed",
 			"processed", processedCount,
 			"failed", failedCount,
 			"total", len(resp.Messages),
@@ -200,9 +200,12 @@ func (p *Poller) poll(ctx context.Context) (*GetUpdatesResponse, error) {
 	}
 
 	// Check for API errors in response
-	// ret=0 is success (including empty messages which is normal timeout)
+	// ret=0 and errcode = 0 is success (including empty messages which is normal timeout)
 	if resp.Ret != 0 {
 		return nil, &APIError{Code: resp.Ret, Message: "getupdates failed"}
+	}
+	if resp.ErrCode != 0 {
+		return nil, &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
 	}
 
 	return &resp, nil

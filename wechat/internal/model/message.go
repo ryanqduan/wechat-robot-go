@@ -203,6 +203,8 @@ type BaseInfo struct {
 // GetUpdatesResponse is the response from POST /ilink/bot/getupdates.
 type GetUpdatesResponse struct {
 	Ret                  int       `json:"ret"`
+	ErrCode              int       `json:"errcode,omitempty"`
+	ErrMsg               string    `json:"errmsg,omitempty"`
 	Messages             []Message `json:"msgs"`
 	GetUpdatesBuf        string    `json:"get_updates_buf"`
 	LongPollingTimeoutMs int       `json:"longpolling_timeout_ms"`
