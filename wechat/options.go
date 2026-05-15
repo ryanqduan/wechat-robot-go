@@ -2,10 +2,12 @@ package wechat
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 )
 
 const (
@@ -37,9 +39,25 @@ func defaultConfig() *botConfig {
 		cdnBaseURL:      DefaultCDNBaseURL,
 		tokenFile:       DefaultTokenFile,
 		contextTokenDir: DefaultContextTokenDir,
-		httpClient:      &http.Client{},
+		httpClient:      defaultHTTPClient(),
 		logger:          slog.Default(),
 		channelVersion:  DefaultChannelVersion,
+	}
+}
+
+// defaultHTTPClient returns an HTTP client with connection pooling
+// and TLS configured to avoid the CPU-intensive X25519MLKEM768
+// hybrid post-quantum key exchange.
+func defaultHTTPClient() *http.Client {
+	return &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				CurvePreferences: []tls.CurveID{tls.X25519},
+			},
+			MaxIdleConns:        100,
+			MaxIdleConnsPerHost: 10,
+			IdleConnTimeout:     90 * time.Second,
+		},
 	}
 }
 
