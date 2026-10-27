@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"sync"
 
@@ -148,7 +149,7 @@ func (b *Bot) Run(ctx context.Context) error {
 	}
 
 	// 3. Create Poller with wrapped handler
-	b.poller = NewPoller(b.client, b.wrapHandler(), b.config.logger, b.config.channelVersion)
+	b.poller = NewPollerWithCursorStore(b.client, b.wrapHandler(), b.config.logger, b.config.channelVersion, b.config.cursorStore)
 
 	// 4. Run poller
 	return b.poller.Run(ctx)
@@ -209,9 +210,23 @@ func (b *Bot) DownloadImageFromItem(ctx context.Context, cdnBaseURL string, img 
 	return b.media.DownloadImage(ctx, cdnBaseURL, img)
 }
 
+// DownloadImageFromItemTo streams a decrypted image from an ImageItem into w.
+// It returns the number of plaintext bytes written to w. On error, w may have
+// received a partial output that the caller should discard.
+func (b *Bot) DownloadImageFromItemTo(ctx context.Context, cdnBaseURL string, img *ImageItem, w io.Writer, opts DownloadOptions) (int64, error) {
+	return b.media.DownloadImageTo(ctx, cdnBaseURL, img, w, opts)
+}
+
 // DownloadVoice downloads and decrypts a voice message from a VoiceItem.
 func (b *Bot) DownloadVoice(ctx context.Context, voice *VoiceItem, cdnBaseURL string) ([]byte, error) {
 	return b.media.DownloadVoice(ctx, cdnBaseURL, voice)
+}
+
+// DownloadVoiceTo streams a decrypted voice message from a VoiceItem into w.
+// It returns the number of plaintext bytes written to w. On error, w may have
+// received a partial output that the caller should discard.
+func (b *Bot) DownloadVoiceTo(ctx context.Context, voice *VoiceItem, cdnBaseURL string, w io.Writer, opts DownloadOptions) (int64, error) {
+	return b.media.DownloadVoiceTo(ctx, cdnBaseURL, voice, w, opts)
 }
 
 // DownloadFileFromItem downloads and decrypts a file from a FileItem.
@@ -219,9 +234,23 @@ func (b *Bot) DownloadFileFromItem(ctx context.Context, file *FileItem, cdnBaseU
 	return b.media.DownloadFileItem(ctx, cdnBaseURL, file)
 }
 
+// DownloadFileFromItemTo streams a decrypted file from a FileItem into w.
+// It returns the number of plaintext bytes written to w. On error, w may have
+// received a partial output that the caller should discard.
+func (b *Bot) DownloadFileFromItemTo(ctx context.Context, file *FileItem, cdnBaseURL string, w io.Writer, opts DownloadOptions) (int64, error) {
+	return b.media.DownloadFileItemTo(ctx, cdnBaseURL, file, w, opts)
+}
+
 // DownloadVideoFromItem downloads and decrypts a video from a VideoItem.
 func (b *Bot) DownloadVideoFromItem(ctx context.Context, video *VideoItem, cdnBaseURL string) ([]byte, error) {
 	return b.media.DownloadVideoItem(ctx, cdnBaseURL, video)
+}
+
+// DownloadVideoFromItemTo streams a decrypted video from a VideoItem into w.
+// It returns the number of plaintext bytes written to w. On error, w may have
+// received a partial output that the caller should discard.
+func (b *Bot) DownloadVideoFromItemTo(ctx context.Context, video *VideoItem, cdnBaseURL string, w io.Writer, opts DownloadOptions) (int64, error) {
+	return b.media.DownloadVideoItemTo(ctx, cdnBaseURL, video, w, opts)
 }
 
 // Media returns the MediaManager for this bot.
