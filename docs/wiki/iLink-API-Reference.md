@@ -577,27 +577,22 @@ type VideoItem struct {
 
 ## 错误码
 
-### 通用错误码
+根据 [Tencent/openclaw-weixin 当前协议说明](https://github.com/Tencent/openclaw-weixin/blob/main/docs/protocol_zh_CN.md)（2026-10-27 核对），响应字段因接口而异：`ret` 为返回码，`errcode` 为可选应用错误码，`errmsg` 为错误描述。该文档描述客户端行为，并非完整服务端契约。
 
-| 错误码 | 说明 |
-|--------|------|
-| 0 | 成功 |
-| -1 | 通用错误 |
-| -2 | 参数错误 |
-| -3 | 频率限制 |
-| -14 | Session 过期 |
-| -100 | 权限错误 |
-| -101 | Token 无效 |
+发送接口可能仅返回 `ret` 和 `errmsg`；成功响应也可能省略 `ret`。例如：
 
-### 媒体上传错误码
+```json
+{"ret": -2, "errmsg": "prepare failed"}
+```
 
-| 错误码 | 说明 |
-|--------|------|
-| 40001 | 文件类型不支持 |
-| 40002 | 文件大小超限 |
-| 40003 | AES 密钥格式错误 |
-| 40004 | MD5 校验失败 |
-| 40005 | 文件 key 格式错误 |
+SDK 的消息发送、轮询、凭据校验和输入状态接口在任一返回码非零时返回 `*wechat.APIError`：
+
+- `Ret`、`ErrCode`：分别保留两个响应码；缺失字段按 Go 零值处理。
+- `Message`：保留 `errmsg`。
+- `Code`：兼容旧调用方，优先取非零 `ErrCode`，否则取 `Ret`。JSON 序列化仅输出原始字段，不将此兼容值写入 `errcode`。
+- 日志示例：`ilink api error: ret=-2, errcode=0, msg=prepare failed`。这里的 `errcode=0` 不代表请求成功。
+
+`IsSessionExpired` 检查任一返回码是否为 `-14`，也兼容旧的 `Code` 字段及包装后的错误。不要仅凭 `ret=-2` 或 `prepare failed` 断定参数错误、限流或 context token 过期；当前协议说明未给出这些情况的完整映射。
 
 ---
 

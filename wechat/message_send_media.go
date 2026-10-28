@@ -57,11 +57,7 @@ func SendImageWithItem(ctx context.Context, client *Client, toUserID, contextTok
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // SendVoiceFromPath reads a local voice file, uploads it to CDN, and sends it as a voice message.
@@ -114,11 +110,7 @@ func SendVoiceWithItem(ctx context.Context, client *Client, toUserID, contextTok
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // SendFileFromPath reads a local file, uploads it to CDN, and sends it as a file message.
@@ -174,11 +166,7 @@ func SendFileWithItem(ctx context.Context, client *Client, toUserID, contextToke
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // SendVideoFromPath reads a local video file, uploads it to CDN, and sends it as a video message.
@@ -231,9 +219,5 @@ func SendVideoWithItem(ctx context.Context, client *Client, toUserID, contextTok
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }

@@ -44,6 +44,7 @@ func TestFileTokenStore_SaveAndLoad(t *testing.T) {
 	}
 	if loaded == nil {
 		t.Fatal("Load() returned nil")
+		return
 	}
 	if loaded.BotToken != creds.BotToken {
 		t.Errorf("BotToken = %q, want %q", loaded.BotToken, creds.BotToken)

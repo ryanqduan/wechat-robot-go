@@ -19,7 +19,6 @@ type mockCursorStore struct {
 	loadErr  error
 	saveErr  bool
 	saves    int
-	loaded   int
 	getCalls int
 }
 

@@ -96,8 +96,8 @@ func (tm *TypingManager) GetConfig(ctx context.Context, toUserID string) (string
 		return "", err
 	}
 
-	if resp.Ret != 0 {
-		return "", &APIError{Code: resp.Ret, Message: resp.ErrMsg}
+	if err := apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg); err != nil {
+		return "", err
 	}
 
 	// Cache the ticket
@@ -132,11 +132,7 @@ func (tm *TypingManager) SendTyping(ctx context.Context, toUserID string) error 
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.Ret, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // StopTyping cancels the "typing" indicator.
@@ -160,11 +156,7 @@ func (tm *TypingManager) StopTyping(ctx context.Context, toUserID string) error 
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.Ret, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // ClearCache clears the cached typing ticket, forcing a refresh on next call.

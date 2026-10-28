@@ -238,11 +238,8 @@ func (p *Poller) poll(ctx context.Context) (*GetUpdatesResponse, error) {
 
 	// Check for API errors in response
 	// ret=0 and errcode = 0 is success (including empty messages which is normal timeout)
-	if resp.Ret != 0 {
-		return nil, &APIError{Code: resp.Ret, Message: "getupdates failed"}
-	}
-	if resp.ErrCode != 0 {
-		return nil, &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
+	if err := apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg); err != nil {
+		return nil, err
 	}
 
 	return &resp, nil

@@ -53,11 +53,7 @@ func SendText(ctx context.Context, client *Client, toUserID, text, contextToken 
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // Reply sends a text reply to an incoming message, automatically using its context_token.
@@ -95,11 +91,7 @@ func SendImage(ctx context.Context, client *Client, toUserID, contextToken strin
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // SendFile sends a file message to a user.
@@ -132,11 +124,7 @@ func SendFile(ctx context.Context, client *Client, toUserID, contextToken string
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // SendMessage sends a custom message with multiple items.
@@ -163,11 +151,7 @@ func SendMessage(ctx context.Context, client *Client, toUserID, contextToken str
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // SendVoice sends a voice message to a user.
@@ -200,11 +184,7 @@ func SendVoice(ctx context.Context, client *Client, toUserID, contextToken strin
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // SendVideo sends a video message to a user.
@@ -237,11 +217,7 @@ func SendVideo(ctx context.Context, client *Client, toUserID, contextToken strin
 		return err
 	}
 
-	if resp.Ret != 0 {
-		return &APIError{Code: resp.ErrCode, Message: resp.ErrMsg}
-	}
-
-	return nil
+	return apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg)
 }
 
 // ReplyWithMedia sends a rich media reply with both text and media items.

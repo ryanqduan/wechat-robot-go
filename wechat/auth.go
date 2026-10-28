@@ -148,17 +148,10 @@ func (a *Auth) ValidateCredentials(ctx context.Context) (bool, error) {
 		return false, err
 	}
 
-	// If we get ret=0, credentials are valid (even with empty messages)
-	if resp.Ret == 0 {
-		return true, nil
+	if err := apiResponseError(resp.Ret, resp.ErrCode, resp.ErrMsg); err != nil {
+		return false, fmt.Errorf("credential validation failed: %w", err)
 	}
-
-	// If we get session expired, credentials are invalid
-	if resp.Ret == -14 {
-		return false, fmt.Errorf("session expired")
-	}
-
-	return false, fmt.Errorf("credential validation failed: ret=%d", resp.Ret)
+	return true, nil
 }
 
 // GetConfigResponse is the response from POST /ilink/bot/getconfig.
