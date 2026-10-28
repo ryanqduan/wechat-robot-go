@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.5.2] - 2026-10-28
+
+### Fixed
+
+- Preserve `ret`, `errcode`, and `errmsg` in `APIError` diagnostics for message sends, polling, credential validation, and typing APIs. Detect nonzero `errcode` even when `ret` is zero or absent, while accepting successful responses that omit both codes.
+- Retain `APIError.Code` as a compatibility field (nonzero `errcode`, otherwise `ret`); JSON uses the original `ret` and `errcode` fields. Recognize session expiration from either response code.
+
+### Changed
+
+- API error log messages now include both `ret` and `errcode`. Consumers parsing the old `code=...` text should migrate to `errors.As` and the structured `APIError` fields. Missing response codes decode to zero.
+
+## [v1.5.1] - 2026-09-08
+
 ### Added
 
 - Getupdates cursor persistence (`CursorStore` interface + `FileCursorStore`,
